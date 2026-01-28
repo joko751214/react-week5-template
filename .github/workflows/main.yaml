@@ -1,0 +1,49 @@
+name: Deploy React to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4️⃣ ✅ 設定 Git commit 身分（關鍵）
+      - name: Configure Git user
+        run: |
+          git config --global user.email "joko751214@gmail.com"
+          git config --global user.name "joko751214"
+      
+      # 5️⃣ 用 token 重寫 remote
+      - name: Authenticate with GitHub
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+
+      # 6️⃣ Build & Deploy
+      - name: Build and deploy
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_API_PATH: ${{ secrets.VITE_API_PATH }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run deploy
