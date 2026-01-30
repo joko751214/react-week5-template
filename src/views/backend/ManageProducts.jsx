@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router';
-import { useState, useEffect, useRef } from 'react';
 import { getProducts, editProduct, addProduct } from '@/api/server/product';
 import { checkLogin } from '@/api/server/login';
 import Pagination from '@/component/Pagination';
 import ProductModal from '@/component/ProductModal';
+import TipsModal from '@/component/TipsModal';
 import Toasts from '@/component/Toasts';
-import { TipsModal } from '@/component/TipsModal';
-import { Button } from 'antd';
 
 export const ManageProducts = () => {
   const navigate = useNavigate();

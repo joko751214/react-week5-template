@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Modal } from 'bootstrap';
 
-export const TipsModal = ({ modalRef, title, btnClass = 'btn-primary' }) => {
+const TipsModal = ({ modalRef, title, btnClass = 'btn-primary' }) => {
   // Modal 初始化
   useEffect(() => {
     if (modalRef.current && !modalRef.current._instance) {
@@ -33,3 +33,5 @@ export const TipsModal = ({ modalRef, title, btnClass = 'btn-primary' }) => {
     </div>
   );
 };
+
+export default TipsModal;

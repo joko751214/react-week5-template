@@ -5,6 +5,21 @@
 
 @import "bootstrap/scss/bootstrap";
 
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
 .spinner-container {
   height: 100vh;
   display: flex;

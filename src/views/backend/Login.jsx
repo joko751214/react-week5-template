@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { login, checkLogin } from '@/api/server/login';
+import { login } from '@/api/server/login';
 import { useNavigate } from 'react-router';
 
 export const Login = () => {
