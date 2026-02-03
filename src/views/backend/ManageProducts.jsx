@@ -1,15 +1,16 @@
 import { useNavigate } from 'react-router';
-import { getProducts, editProduct, addProduct } from '@/api/server/product';
+import { getProducts, editProduct, addProduct, deleteProduct } from '@/api/server/product';
 import { checkLogin } from '@/api/server/login';
-import Pagination from '@/component/Pagination';
 import ProductModal from '@/component/ProductModal';
 import TipsModal from '@/component/TipsModal';
-import Toasts from '@/component/Toasts';
 
 export const ManageProducts = () => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState(null);
 
   // 檢查是否為管理員
   const checkAdmin = async () => {
@@ -23,17 +24,14 @@ export const ManageProducts = () => {
     }
   };
 
-  useEffect(() => {
-    checkAdmin();
-  }, []);
-
   const [products, setProducts] = useState([]);
   // 取得產品列表
-  const handleGetProducts = async () => {
+  const handleGetProducts = async (page) => {
+    const pageNum = page ?? pagination.current_page ?? 1;
     setIsLoading(true);
     try {
       const { data } = await getProducts({
-        page: pagination.current_page || 1,
+        page: pageNum,
       });
       setProducts(data.products);
       setPagination(data.pagination);
@@ -47,11 +45,13 @@ export const ManageProducts = () => {
   const [pagination, setPagination] = useState({});
   const handlePageChange = (page) => {
     setPagination((prev) => ({ ...prev, current_page: page }));
+    handleGetProducts(page);
   };
 
   useEffect(() => {
+    checkAdmin();
     handleGetProducts();
-  }, [pagination.current_page]);
+  }, []);
 
   // 按鈕載入中狀態
   const [btnLoading, setBtnLoading] = useState({});
@@ -77,8 +77,8 @@ export const ManageProducts = () => {
     imagesUrl: [],
   };
   const [product, setProduct] = useState({ ...originProduct });
-  const productModalRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
+
   // 開啟 Modal（新增或編輯）
   const handleOpenModal = (productData = null) => {
     if (productData) {
@@ -90,7 +90,12 @@ export const ManageProducts = () => {
       setProduct({ ...originProduct });
       setIsEditing(false);
     }
-    productModalRef.current.show();
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setProduct({ ...originProduct });
   };
 
   const toastRef = useRef(null);
@@ -106,125 +111,120 @@ export const ManageProducts = () => {
         } else {
           await addProduct(productData);
         }
-        const message = isEditing ? '編輯成功' : '新增成功';
-        setToastMessage(message);
-        setIsErrorMessage(false);
-        toastRef.current.show();
-        setTimeout(() => {
-          productModalRef.current.hide();
-        }, 500);
+        const successMessage = isEditing ? '編輯成功' : '新增成功';
+        message.success(successMessage);
+        handleCloseModal();
         handleGetProducts();
       } catch (error) {
-        setToastMessage(error.response.data.message.join(' ') || '操作失敗');
-        setIsErrorMessage(true);
-        toastRef.current.show();
+        message.error(error.response?.data?.message?.join(' ') || '操作失敗');
       }
     });
   };
 
-  const tipsRef = useRef(null);
-  const [deleteItemTitle, seetDeleteItemTitle] = useState('');
+  const [deleteItemTitle, setDeleteItemTitle] = useState('');
+
+  // 開啟刪除確認 Modal
   const handleOpenTipsModal = (productData) => {
-    seetDeleteItemTitle(productData.title);
-    tipsRef.current.show();
+    setDeleteItemTitle(productData.title);
+    setDeletingProductId(productData.id);
+    setIsTipsModalOpen(true);
+  };
+
+  const handleCloseTipsModal = () => {
+    setIsTipsModalOpen(false);
+    setDeleteItemTitle('');
+    setDeletingProductId(null);
   };
 
   // 刪除產品
-  const handleDeleteProduct = async (id) => {
-    await withBtnLoading(`delete_${id}`, async () => {
+  const handleDeleteProduct = async () => {
+    if (!deletingProductId) return;
+    await withBtnLoading(`delete_${deletingProductId}`, async () => {
       try {
-        await deleteProduct(id);
-        setToastMessage('刪除成功');
-        setIsErrorMessage(false);
-        toastRef.current.show();
+        await deleteProduct(deletingProductId);
+        message.success('刪除成功');
+        handleCloseTipsModal();
         handleGetProducts();
       } catch (err) {
         console.error(err);
+        message.error('刪除失敗');
       }
     });
   };
+  const columns = [
+    { title: '分類', dataIndex: 'category', key: 'category' },
+    { title: '產品名稱', dataIndex: 'title', key: 'title' },
+    { title: '原價', dataIndex: 'origin_price', key: 'origin_price', align: 'center' },
+    { title: '售價', dataIndex: 'price', key: 'price', align: 'center' },
+    {
+      title: '是否啟用',
+      dataIndex: 'is_enabled',
+      key: 'is_enabled',
+      render: (val) => (val ? <Tag color="green">啟用</Tag> : <span>未啟用</span>),
+      align: 'center',
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => handleOpenModal(record)}
+            disabled={btnLoading[`delete_${record.id}`]}
+          >
+            編輯
+          </Button>
+          <Button
+            type="primary"
+            danger
+            icon={<DeleteOutlined />}
+            loading={btnLoading[`delete_${record.id}`]}
+            onClick={() => handleOpenTipsModal(record)}
+          >
+            刪除
+          </Button>
+        </Space>
+      ),
+      align: 'center',
+    },
+  ];
 
   return (
     <>
-      {isLoading ? (
-        <div className="spinner-container">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+      <div className="lg:w-5xl xl:w-7xl mx-auto">
+        <div style={{ textAlign: 'right', marginBottom: 16 }}>
+          <Button
+            className="mt-2"
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => handleOpenModal()}
+          >
+            建立新的產品
+          </Button>
         </div>
-      ) : (
-        <div>
-          <div className="container">
-            <Button type="primary">Button</Button>
-            <div className="text-end mt-4">
-              <button type="button" className="btn btn-primary" onClick={() => handleOpenModal()}>
-                建立新的產品
-              </button>
-            </div>
-            <table className="table mt-4">
-              <thead>
-                <tr>
-                  <th width="120">分類</th>
-                  <th>產品名稱</th>
-                  <th width="120">原價</th>
-                  <th width="120">售價</th>
-                  <th width="100">是否啟用</th>
-                  <th width="150">編輯</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products && products.length > 0 ? (
-                  products.map((product) => (
-                    <tr key={product.id}>
-                      <td>{product.category}</td>
-                      <td>{product.title}</td>
-                      <td className="text-center">{product.origin_price}</td>
-                      <td className="text-center">{product.price}</td>
-                      <td>{product.is_enabled ? <span className="text-success">啟用</span> : <span>未啟用</span>}</td>
-                      <td>
-                        <div className="btn-group">
-                          <button
-                            type="button"
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={() => handleOpenModal(product)}
-                            disabled={btnLoading[`delete_${product.id}`]}
-                          >
-                            編輯
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleOpenTipsModal(product)}
-                            disabled={btnLoading[`delete_${product.id}`]}
-                          >
-                            {btnLoading[`delete_${product.id}`] && (
-                              <span
-                                className="spinner-border spinner-border-sm me-1"
-                                role="status"
-                                aria-hidden="true"
-                              ></span>
-                            )}
-                            刪除
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5">尚無產品資料</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            {/* 分頁 */}
-            {pagination.total_pages > 0 && <Pagination pagination={pagination} onPageChange={handlePageChange} />}
-          </div>
-        </div>
-      )}
-      {/* 新增產品 Modal */}
+
+        <Table
+          dataSource={products}
+          columns={columns}
+          rowKey="id"
+          pagination={{
+            current: pagination.current_page || 1,
+            pageSize: pagination.per_page || 10,
+            total: pagination.total || (pagination.total_pages || 0) * (pagination.per_page || 10),
+            onChange: handlePageChange,
+            showSizeChanger: false,
+          }}
+          loading={isLoading}
+        />
+      </div>
+
+      {/* 新增、編輯產品 */}
       <ProductModal
-        modalRef={productModalRef}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         product={product}
         onProductChange={setProduct}
         isLoading={btnLoading.productAction}
@@ -234,14 +234,14 @@ export const ManageProducts = () => {
 
       {/* 刪除產品 Modal */}
       <TipsModal
-        modalRef={tipsRef}
-        title={`是否要刪除「${deleteItemTitle}」`}
-        btnClass="btn-danger"
-        handleDeleteProduct={handleDeleteProduct}
+        isOpen={isTipsModalOpen}
+        onClose={handleCloseTipsModal}
+        title={`是否要刪除「${deleteItemTitle}」?`}
+        loading={btnLoading[`delete_${deletingProductId}`]}
+        onConfirm={handleDeleteProduct}
       />
-
       {/* toast */}
-      <Toasts modalRef={toastRef} toastMesage={toastMesage} isErrorMessage={isErrorMessage} />
+      {/* <Toasts modalRef={toastRef} toastMesage={toastMesage} isErrorMessage={isErrorMessage} /> */}
     </>
   );
 };

@@ -1,9 +1,4 @@
-// Required
-@import "bootstrap/scss/functions";
-
-@import "./variables";
-
-@import "bootstrap/scss/bootstrap";
+@import "tailwindcss";
 
 .login {
   display: flex;
