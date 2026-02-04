@@ -1,4 +1,4 @@
-import { uploadImage } from '../api/server/product';
+import { uploadImage } from '../api/server/admin';
 import { Form } from 'antd';
 import { rules } from '@/utils/formRules';
 
@@ -57,7 +57,6 @@ const ProductModal = ({
       formData.append('file-to-upload', file);
       try {
         const { data } = await uploadImage(formData);
-        console.log(data, 'upload response');
         if (data.success) {
           const updatedImages = [...(localProduct.imagesUrl || []), data.imageUrl];
           const updated = { ...localProduct, imagesUrl: updatedImages };

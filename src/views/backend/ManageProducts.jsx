@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { getProducts, editProduct, addProduct, deleteProduct } from '@/api/server/product';
+import { getProducts, editProduct, addProduct, deleteProduct } from '@/api/server/admin';
 import { checkLogin } from '@/api/server/login';
 import ProductModal from '@/component/ProductModal';
 import TipsModal from '@/component/TipsModal';

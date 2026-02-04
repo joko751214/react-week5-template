@@ -1,6 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { getPublicProducts } from '../../api/server/product';
+import { getPublicProducts } from '@/api/server/products';
+import { categories } from '@/utils/enum';
+import { useCart } from '@/context/CartContext';
+
+const sortOptions = [
+  { value: 'default', label: '預設排序' },
+  { value: 'price-low', label: '價格：低到高' },
+  { value: 'price-high', label: '價格：高到低' },
+  { value: 'name', label: '名稱排序' },
+];
 
 export const Products = () => {
   const [products, setProducts] = useState([]);
@@ -10,20 +18,11 @@ export const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('default');
-  const pageSize = 12;
 
-  // 產品分類
-  const categories = [
-    { value: null, label: '全部商品', icon: '🐾' },
-    { value: 'dog', label: '狗狗用品', icon: '🐕' },
-    { value: 'cat', label: '貓咪用品', icon: '🐱' },
-    { value: 'class', label: '寵物相關課程', icon: '🎯' },
-    { value: 'supplies', label: '寵物周邊小物', icon: '🎾' },
-  ];
+  const pageSize = 10;
 
   // 載入產品資料
   const loadProducts = async () => {
-    console.log('loadProducts');
     try {
       setLoading(true);
       const response = await getPublicProducts({ category: selectedCategory, page: currentPage });
@@ -55,7 +54,6 @@ export const Products = () => {
       }
 
       setProducts(filteredProducts);
-      console.log(filteredProducts.length, 'filteredProducts.length');
       filteredProducts.length < 10
         ? setTotalProducts(filteredProducts.length)
         : setTotalProducts(response.data.pagination?.total_pages * pageSize);
@@ -82,10 +80,15 @@ export const Products = () => {
     loadProducts();
   };
 
-  // 加入購物車
-  const handleAddToCart = (product) => {
-    message.success(`已將 ${product.title} 加入購物車`);
-    // TODO: 實作購物車邏輯
+  // 加入購物車（使用 Context）
+  const { addToCart } = useCart();
+  const handleAddToCart = async (product) => {
+    try {
+      const data = { product_id: product.id, qty: 1 };
+      await addToCart({ data });
+    } catch (err) {
+      // Context 已處理錯誤提示
+    }
   };
 
   if (loading) {
@@ -117,11 +120,11 @@ export const Products = () => {
             </div>
 
             {/* 排序選擇 */}
-            <Select size="large" value={sortBy} onChange={setSortBy} className="w-full">
-              <Option value="default">預設排序</Option>
+            <Select size="large" value={sortBy} onChange={setSortBy} className="w-full" options={sortOptions}>
+              {/* <Option value="default">預設排序</Option>
               <Option value="price-low">價格：低到高</Option>
               <Option value="price-high">價格：高到低</Option>
-              <Option value="name">名稱排序</Option>
+              <Option value="name">名稱排序</Option> */}
             </Select>
           </div>
         </div>
@@ -134,6 +137,7 @@ export const Products = () => {
               <div className="space-y-2">
                 {categories.map((category) => (
                   <button
+                    type="button"
                     key={category.value}
                     onClick={() => handleSelectedCategory(category.value)}
                     className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 ${
@@ -233,9 +237,10 @@ export const Products = () => {
                             查看詳情
                           </Link>
                           <button
+                            type="button"
                             onClick={() => handleAddToCart(product)}
                             disabled={!product.is_enabled}
-                            className="flex-1 bg-linear-to-r from-orange-400 to-pink-400 hover:from-orange-500 hover:to-pink-500 text-white py-2.5 px-4 rounded-lg font-medium transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            className="cart-btn"
                           >
                             加入購物車
                           </button>

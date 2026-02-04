@@ -1,8 +1,9 @@
 import { Link, Outlet } from 'react-router';
-import { useState } from 'react';
+import { CartProvider, useCart } from '@/context/CartContext';
 
-export const Layout = () => {
+const LayoutInner = () => {
   const [query, setQuery] = useState('');
+  const { cartCount } = useCart();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -10,7 +11,7 @@ export const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       <header className="bg-linear-to-r from-orange-400 to-pink-400 text-white">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -44,11 +45,14 @@ export const Layout = () => {
 
             <Link to="/cart" className="relative">
               <div className="bg-white/20 px-3 py-2 rounded-lg hover:bg-white/30">🛒</div>
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5">3</span>
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5">
+                {cartCount}
+              </span>
             </Link>
           </div>
         </div>
       </header>
+
       {/* 頁面橫幅 */}
       <div className="bg-linear-to-r from-orange-400 to-pink-400 text-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -75,5 +79,13 @@ export const Layout = () => {
         </div>
       </footer>
     </div>
+  );
+};
+
+export const Layout = () => {
+  return (
+    <CartProvider>
+      <LayoutInner />
+    </CartProvider>
   );
 };
