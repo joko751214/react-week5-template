@@ -98,10 +98,6 @@ export const ManageProducts = () => {
     setProduct({ ...originProduct });
   };
 
-  const toastRef = useRef(null);
-  const [toastMesage, setToastMessage] = useState('');
-  const [isErrorMessage, setIsErrorMessage] = useState(false);
-
   // 新增或編輯產品
   const handleProductAction = async (productData, isEditing) => {
     await withBtnLoading('productAction', async () => {
@@ -205,15 +201,14 @@ export const ManageProducts = () => {
             建立新的產品
           </Button>
         </div>
-
         <Table
           dataSource={products}
           columns={columns}
           rowKey="id"
           pagination={{
             current: pagination.current_page || 1,
-            pageSize: pagination.per_page || 10,
-            total: pagination.total || (pagination.total_pages || 0) * (pagination.per_page || 10),
+            pageSize: 10,
+            total: pagination.total_pages * 10,
             onChange: handlePageChange,
             showSizeChanger: false,
           }}
@@ -240,8 +235,6 @@ export const ManageProducts = () => {
         loading={btnLoading[`delete_${deletingProductId}`]}
         onConfirm={handleDeleteProduct}
       />
-      {/* toast */}
-      {/* <Toasts modalRef={toastRef} toastMesage={toastMesage} isErrorMessage={isErrorMessage} /> */}
     </>
   );
 };
