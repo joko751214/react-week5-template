@@ -15,7 +15,7 @@ export function addToCart(data) {
   return request({
     url: `/api/${path}/cart`,
     method: 'post',
-    data,
+    data: {data}
   });
 }
 
@@ -24,7 +24,7 @@ export function updateCartItem(id, data) {
   return request({
     url: `/api/${path}/cart/${id}`,
     method: 'put',
-    data,
+    data: {data},
   });
 }
 

@@ -40,7 +40,7 @@ export const Cart = () => {
   const changeQty = async (item, qty) => {
     const newQty = Math.max(1, qty);
     try {
-      await updateCartItem(item.id, { qty: newQty });
+      await updateCartItem(item.id, { product_id: item.raw.product_id, qty: newQty });
       message.success('已更新數量');
       await loadCart();
     } catch (err) {

@@ -16,7 +16,7 @@ export function addProduct(data) {
   return request({
     url: `/api/${path}/admin/product`,
     method: 'post',
-    data,
+    data: {data}
   });
 }
 
@@ -33,7 +33,7 @@ export function editProduct(data) {
   return request({
     url: `/api/${path}/admin/product/${data.id}`,
     method: 'put',
-    data,
+    data: {data}
   });
 }
 

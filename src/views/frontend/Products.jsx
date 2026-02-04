@@ -85,7 +85,7 @@ export const Products = () => {
   const handleAddToCart = async (product) => {
     try {
       const data = { product_id: product.id, qty: 1 };
-      await addToCart({ data });
+      await addToCart(data);
     } catch (err) {
       // Context 已處理錯誤提示
     }
@@ -94,7 +94,7 @@ export const Products = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" tip="載入中..." />
+        <Spin size="large" />
       </div>
     );
   }

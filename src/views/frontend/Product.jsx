@@ -29,7 +29,7 @@ export const Product = () => {
     if (!product) return;
     try {
       const data = { product_id: product.id, qty: 1 };
-      await addToCart({ data });
+      await addToCart(data);
     } catch (err) {
       // 錯誤訊息在 context 已處理
     }
@@ -38,7 +38,7 @@ export const Product = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <Spin size="large" tip="載入中..." />
+        <Spin size="large" />
       </div>
     );
   }
