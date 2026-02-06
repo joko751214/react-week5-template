@@ -81,6 +81,9 @@ const ProductModal = ({
 
   return (
     <Modal
+      // 這邊添加 key 的原因在於 React 會根據 key 值做判定是否不同 key
+      // 是的話會將其從 DOM 移除，再呈現另外一個，就可以去重置被移除元件的 state。
+      key={product.id}
       title={isEditing ? '編輯產品' : '新增產品'}
       open={isOpen}
       onCancel={onClose}

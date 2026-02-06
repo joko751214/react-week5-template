@@ -87,7 +87,6 @@ export const ManageProducts = () => {
       setIsEditing(true);
     } else {
       // 新增模式
-      setProduct({ ...originProduct });
       setIsEditing(false);
     }
     setIsModalOpen(true);
